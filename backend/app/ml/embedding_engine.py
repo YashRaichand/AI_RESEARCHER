@@ -3,19 +3,24 @@ import json
 import numpy as np
 import faiss
 from typing import List, Dict, Any, Optional
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
-
 
 class EmbeddingEngine:
     def __init__(self, index_path: str = "./faiss_indexes"):
         self.index_path = Path(index_path)
         self.index_path.mkdir(parents=True, exist_ok=True)
-        self.model = SentenceTransformer("all-mpnet-base-v2")
         self.dimension = 768
         self.index: Optional[faiss.Index] = None
         self.metadata: List[Dict] = []
+        self._model = None
         self._load_or_create_index()
+
+    @property
+    def model(self):
+        if self._model is None:
+            from sentence_transformers import SentenceTransformer
+            self._model = SentenceTransformer("all-mpnet-base-v2")
+        return self._model
 
     def _load_or_create_index(self):
         idx_file = self.index_path / "main.index"
@@ -49,15 +54,6 @@ class EmbeddingEngine:
         for section_name, section_text in paper_data.get("sections", {}).items():
             if section_text and len(section_text) > 100:
                 chunks.append({"text": section_text[:2000], "type": "section", "index": 0, "section": section_name})
-
-        for idx, table in enumerate(paper_data.get("tables", [])[:20]):
-            table_text = str(table.get("data", ""))[:500]
-            if table_text:
-                chunks.append({"text": table_text, "type": "table", "index": idx, "section": "table"})
-
-        for idx, fig in enumerate(paper_data.get("figures", [])[:20]):
-            caption = fig.get("caption", f"Figure {idx+1}")
-            chunks.append({"text": caption, "type": "figure_caption", "index": idx, "section": "figure"})
 
         if not chunks:
             return []
@@ -101,18 +97,4 @@ class EmbeddingEngine:
             if len(results) >= top_k:
                 break
         return results
-
-    def delete_paper_embeddings(self, paper_id: str):
-        self.metadata = [m for m in self.metadata if m["paper_id"] != paper_id]
-        self._rebuild_index()
-
-    def _rebuild_index(self):
-        new_index = faiss.IndexFlatIP(self.dimension)
-        if self.metadata:
-            texts = [m["chunk_text"] for m in self.metadata]
-            embeddings = self.embed_texts(texts)
-            new_index.add(embeddings)
-            for i, m in enumerate(self.metadata):
-                m["faiss_id"] = i
-        self.index = new_index
-        self._save_index()
+    

@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #06060f;
+    color: #f5f5fa;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-card {
+    @apply glass rounded-2xl;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #a39cff 0%, #7f77dd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0d1f;
+}
+::-webkit-scrollbar-thumb {
+  background: #534ab7;
+  border-radius: 4px;
+}

@@ -35,3 +35,4 @@ class User(Base):
     presentations = relationship("Presentation", back_populates="user", cascade="all, delete-orphan")
     knowledge_graphs = relationship("KnowledgeGraph", back_populates="user", cascade="all, delete-orphan")
     analytics = relationship("Analytics", back_populates="user", cascade="all, delete-orphan")
+    
